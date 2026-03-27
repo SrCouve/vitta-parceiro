@@ -208,6 +208,8 @@
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
   <script>
     const API_BASE = "https://ijveuheldszomunyohrr.supabase.co/functions/v1/merchant-page";
+    const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqdmV1aGVsZHN6b211bnlvaHJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTQwMjAsImV4cCI6MjA4ODgzMDAyMH0.gsqkGqJ5JDdOGzU8fplzutCJKSNdAiDWSq31l6778cI";
+    const API_HEADERS = { "apikey": ANON_KEY, "Authorization": "Bearer " + ANON_KEY };
     // Slug from path (e.g. /acaidavila) or fallback to query param
     const pathSlug = window.location.pathname.replace(/^\//, "").replace(/\/$/, "");
     const params = new URLSearchParams(window.location.search);
@@ -227,7 +229,7 @@
 
     async function init() {
       try {
-        const res = await fetch(API_BASE + "/api/merchant?token=" + LINK_TOKEN);
+        const res = await fetch(API_BASE + "/api/merchant?token=" + LINK_TOKEN, { headers: API_HEADERS });
         const data = await res.json();
         if (!data.ok) {
           document.getElementById("app").innerHTML = '<div class="error-text">Parceiro nao encontrado ou desativado.</div>';
@@ -324,7 +326,7 @@
 
     async function lookupUser(uid) {
       try {
-        const res = await fetch(API_BASE + "/api/lookup?uid=" + uid + "&token=" + LINK_TOKEN);
+        const res = await fetch(API_BASE + "/api/lookup?uid=" + uid + "&token=" + LINK_TOKEN, { headers: API_HEADERS });
         const data = await res.json();
         if (!data.ok) { alert("Usuario nao encontrado"); return; }
 
@@ -358,7 +360,7 @@
       try {
         const res = await fetch(API_BASE + "/api/redeem", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...API_HEADERS },
           body: JSON.stringify({
             token: LINK_TOKEN, user_id: scannedUserId,
             product_id: selectedProduct.id, amount: selectedProduct.spark_cost,
@@ -384,7 +386,7 @@
 
     async function loadHistory() {
       try {
-        const res = await fetch(API_BASE + "/api/history?token=" + LINK_TOKEN);
+        const res = await fetch(API_BASE + "/api/history?token=" + LINK_TOKEN, { headers: API_HEADERS });
         const data = await res.json();
         if (!data.ok) return;
 
