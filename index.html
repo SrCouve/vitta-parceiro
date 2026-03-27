@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0D0D0D">
+  <title>VITTA UP Parceiro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0D0D0D; color: #fff;
+      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container { max-width: 420px; margin: 0 auto; padding: 20px; padding-top: max(env(safe-area-inset-top), 20px); padding-bottom: 40px; }
+
+    /* Logo */
+    .logo { text-align: center; margin-bottom: 28px; }
+    .logo-text { font-size: 26px; font-weight: 800; letter-spacing: 1px; }
+    .logo-vitta { background: linear-gradient(135deg, #FF6C24, #FF8540, #FFAC7D); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .logo-up { color: #fff; font-weight: 300; }
+    .logo small { display: block; font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 6px; letter-spacing: 2px; text-transform: uppercase; }
+
+    /* Glass card */
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .card h2 { font-size: 14px; font-weight: 700; color: #FFAC7D; margin-bottom: 14px; letter-spacing: 0.5px; text-transform: uppercase; }
+
+    /* Merchant header */
+    .merchant-name { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+    .merchant-cat { font-size: 13px; color: rgba(255,255,255,0.4); font-weight: 400; }
+
+    /* Products */
+    .product-list { display: flex; flex-direction: column; gap: 10px; }
+    .product-btn {
+      background: rgba(255,255,255,0.03);
+      border: 1.5px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 16px 18px;
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; transition: all 0.25s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .product-btn:active { transform: scale(0.97); }
+    .product-btn.selected {
+      background: rgba(255,108,36,0.1);
+      border-color: #FF6C24;
+      box-shadow: 0 0 20px rgba(255,108,36,0.1);
+    }
+    .product-name { font-size: 15px; font-weight: 700; }
+    .product-desc { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 3px; font-weight: 400; }
+    .product-cost { font-size: 17px; font-weight: 800; color: #FF6C24; white-space: nowrap; }
+    .product-cost small { font-size: 11px; font-weight: 600; color: rgba(255,108,36,0.7); }
+
+    /* Scan button */
+    .btn-scan {
+      width: 100%; padding: 18px; border: none; border-radius: 16px;
+      font-size: 16px; font-weight: 700; color: #fff; cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(135deg, #FF6C24 0%, #FF8540 100%);
+      box-shadow: 0 12px 32px rgba(255,108,36,0.25);
+      transition: all 0.25s ease;
+      position: relative; overflow: hidden;
+    }
+    .btn-scan::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    }
+    .btn-scan:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
+    .btn-scan:active:not(:disabled) { transform: scale(0.97); }
+
+    /* Scanner */
+    .scanner { position: fixed; inset: 0; background: #000; z-index: 100; display: none; }
+    .scanner video { width: 100%; height: 100%; object-fit: cover; }
+    .scanner-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .scanner-frame {
+      width: 260px; height: 260px;
+      border: 3px solid #FF6C24;
+      border-radius: 24px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.65), 0 0 40px rgba(255,108,36,0.2);
+    }
+    .scanner-text { color: rgba(255,255,255,0.7); font-size: 14px; margin-top: 24px; text-align: center; font-weight: 500; line-height: 1.5; }
+    .scanner-close {
+      position: absolute; top: max(env(safe-area-inset-top), 16px); right: 20px;
+      width: 44px; height: 44px; border-radius: 22px;
+      background: rgba(255,255,255,0.12); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff; font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Confirm modal */
+    .confirm-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px); }
+    .confirm-card {
+      background: #151515; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px; padding: 32px 28px; width: 100%; max-width: 360px; text-align: center;
+    }
+    .confirm-avatar {
+      width: 64px; height: 64px; border-radius: 32px;
+      background: linear-gradient(135deg, #FF6C24, #FFAC7D);
+      margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: 800; color: #fff;
+    }
+    .confirm-name { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .confirm-balance { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 24px; font-weight: 500; }
+    .confirm-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 0 -28px 20px; }
+    .confirm-product { font-size: 14px; color: #FFAC7D; margin-bottom: 6px; font-weight: 600; }
+    .confirm-amount { font-size: 36px; font-weight: 800; color: #FF6C24; margin-bottom: 24px; }
+    .btn-confirm {
+      width: 100%; padding: 16px; border: none; border-radius: 14px;
+      font-size: 16px; font-weight: 700; color: #fff; cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
+      background: #FF6C24; margin-bottom: 10px;
+      transition: all 0.2s;
+    }
+    .btn-confirm:active { transform: scale(0.97); }
+    .btn-cancel {
+      width: 100%; padding: 14px;
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 14px;
+      font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.5);
+      cursor: pointer; background: transparent;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    /* Success */
+    .success-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 300; display: none; align-items: center; justify-content: center; }
+    .success-card { text-align: center; padding: 40px; animation: successPop 0.4s ease; }
+    @keyframes successPop { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    .success-check { width: 80px; height: 80px; border-radius: 40px; background: rgba(255,108,36,0.15); border: 2px solid #FF6C24; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 36px; color: #FF6C24; }
+    .success-text { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .success-sub { font-size: 14px; color: rgba(255,255,255,0.4); font-weight: 500; }
+
+    /* Stats */
+    .stats-row { display: flex; gap: 12px; margin-top: 14px; }
+    .stat-card {
+      flex: 1; background: rgba(255,108,36,0.06);
+      border: 1px solid rgba(255,108,36,0.1);
+      border-radius: 14px; padding: 14px; text-align: center;
+    }
+    .stat-value { font-size: 22px; font-weight: 800; color: #FF6C24; }
+    .stat-label { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* History */
+    .history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .history-name { font-size: 14px; font-weight: 700; }
+    .history-product { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 2px; font-weight: 400; }
+    .history-amount { font-size: 15px; font-weight: 800; color: #FF6C24; }
+    .history-time { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 2px; }
+    .history-empty { text-align: center; color: rgba(255,255,255,0.2); font-size: 13px; padding: 20px; font-weight: 500; }
+
+    .loading { text-align: center; padding: 60px 20px; }
+    .loading-spinner { width: 32px; height: 32px; border: 3px solid rgba(255,108,36,0.2); border-top-color: #FF6C24; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: rgba(255,255,255,0.3); font-size: 14px; }
+    .error-text { color: rgba(255,255,255,0.4); font-size: 15px; text-align: center; padding: 60px 20px; }
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Carregando...</div>
+    </div>
+  </div>
+
+  <div class="scanner" id="scanner">
+    <video id="video" autoplay playsinline></video>
+    <div class="scanner-overlay">
+      <div class="scanner-frame"></div>
+      <p class="scanner-text">Aponte para o QR code<br>do cartao VITTA UP do cliente</p>
+    </div>
+    <button class="scanner-close" onclick="closeScanner()">&#10005;</button>
+  </div>
+
+  <div class="confirm-modal" id="confirmModal">
+    <div class="confirm-card">
+      <div class="confirm-avatar" id="confirmAvatar"></div>
+      <div class="confirm-name" id="confirmName"></div>
+      <div class="confirm-balance" id="confirmBalance"></div>
+      <div class="confirm-divider"></div>
+      <div class="confirm-product" id="confirmProduct"></div>
+      <div class="confirm-amount" id="confirmAmount"></div>
+      <button class="btn-confirm" id="btnConfirm" onclick="doRedeem()">Confirmar resgate</button>
+      <button class="btn-cancel" onclick="cancelConfirm()">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="success-modal" id="successModal">
+    <div class="success-card">
+      <div class="success-check">&#10003;</div>
+      <div class="success-text" id="successText">Resgate concluido!</div>
+      <div class="success-sub" id="successSub"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script>
+    const API_BASE = "https://ijveuheldszomunyohrr.supabase.co/functions/v1/merchant-page";
+    const params = new URLSearchParams(window.location.search);
+    const LINK_TOKEN = params.get("t") || params.get("token") || "";
+
+    let merchant = null;
+    let products = [];
+    let selectedProduct = null;
+    let scannedUserId = null;
+    let scannedUser = null;
+
+    if (!LINK_TOKEN) {
+      document.getElementById("app").innerHTML = '<div class="error-text">Link invalido. Solicite um novo link ao VITTA UP.</div>';
+    } else {
+      init();
+    }
+
+    async function init() {
+      try {
+        const res = await fetch(API_BASE + "/api/merchant?token=" + LINK_TOKEN);
+        const data = await res.json();
+        if (!data.ok) {
+          document.getElementById("app").innerHTML = '<div class="error-text">Parceiro nao encontrado ou desativado.</div>';
+          return;
+        }
+        merchant = data.merchant;
+        products = data.products;
+        render();
+        loadHistory();
+      } catch (e) {
+        document.getElementById("app").innerHTML = '<div class="error-text">Erro ao carregar. Tente novamente.</div>';
+      }
+    }
+
+    function render() {
+      document.getElementById("app").innerHTML = `
+        <div class="logo">
+          <div class="logo-text"><span class="logo-vitta">VITTA</span><span class="logo-up">UP</span></div>
+          <small>Painel do Parceiro</small>
+        </div>
+        <div class="card">
+          <div class="merchant-name">${merchant.name}</div>
+          <div class="merchant-cat">${[merchant.category, merchant.location].filter(Boolean).join(" \u00B7 ")}</div>
+        </div>
+        <div class="card">
+          <h2>Selecione o produto</h2>
+          <div class="product-list" id="productList">
+            ${products.map((p, i) => `
+              <div class="product-btn" onclick="selectProduct(${i})" id="prod-${i}">
+                <div>
+                  <div class="product-name">${p.name}</div>
+                  ${p.description ? `<div class="product-desc">${p.description}</div>` : ""}
+                </div>
+                <div class="product-cost">${p.spark_cost} <small>sparks</small></div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+        <button class="btn-scan" id="scanBtn" disabled onclick="openScanner()">Escanear QR do cliente</button>
+        <div class="card" style="margin-top:16px">
+          <h2>Resgates de hoje</h2>
+          <div class="stats-row">
+            <div class="stat-card"><div class="stat-value" id="statCount">0</div><div class="stat-label">resgates</div></div>
+            <div class="stat-card"><div class="stat-value" id="statSparks">0</div><div class="stat-label">sparks</div></div>
+          </div>
+          <div id="historyList" style="margin-top:14px"></div>
+        </div>
+      `;
+    }
+
+    function selectProduct(i) {
+      selectedProduct = products[i];
+      document.querySelectorAll(".product-btn").forEach((el, j) => el.classList.toggle("selected", j === i));
+      document.getElementById("scanBtn").disabled = false;
+    }
+
+    let videoStream = null;
+    let scanInterval = null;
+
+    function openScanner() {
+      if (!selectedProduct) return;
+      document.getElementById("scanner").style.display = "block";
+      const video = document.getElementById("video");
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(stream => { videoStream = stream; video.srcObject = stream; video.play(); startScanning(); })
+        .catch(err => { alert("Camera indisponivel: " + err.message); closeScanner(); });
+    }
+
+    function startScanning() {
+      const video = document.getElementById("video");
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      scanInterval = setInterval(() => {
+        if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        if (code) {
+          try {
+            const data = JSON.parse(code.data);
+            if (data.uid) { scannedUserId = data.uid; closeScanner(); lookupUser(data.uid); }
+          } catch {}
+        }
+      }, 200);
+    }
+
+    function closeScanner() {
+      document.getElementById("scanner").style.display = "none";
+      if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+      if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+    }
+
+    async function lookupUser(uid) {
+      try {
+        const res = await fetch(API_BASE + "/api/lookup?uid=" + uid + "&token=" + LINK_TOKEN);
+        const data = await res.json();
+        if (!data.ok) { alert("Usuario nao encontrado"); return; }
+
+        scannedUser = data;
+        document.getElementById("confirmAvatar").textContent = data.name.charAt(0).toUpperCase();
+        document.getElementById("confirmName").textContent = data.name;
+        document.getElementById("confirmBalance").textContent = "Saldo: " + data.balance + " sparks";
+        document.getElementById("confirmProduct").textContent = selectedProduct.name;
+        document.getElementById("confirmAmount").textContent = "-" + selectedProduct.spark_cost + " sparks";
+        document.getElementById("confirmModal").style.display = "flex";
+
+        const btn = document.getElementById("btnConfirm");
+        if (data.balance < selectedProduct.spark_cost) {
+          btn.disabled = true; btn.textContent = "Saldo insuficiente"; btn.style.background = "#444";
+        } else {
+          btn.disabled = false; btn.textContent = "Confirmar resgate"; btn.style.background = "#FF6C24";
+        }
+      } catch { alert("Erro ao buscar usuario"); }
+    }
+
+    function cancelConfirm() {
+      document.getElementById("confirmModal").style.display = "none";
+      scannedUserId = null; scannedUser = null;
+    }
+
+    async function doRedeem() {
+      if (!scannedUserId || !selectedProduct) return;
+      const btn = document.getElementById("btnConfirm");
+      btn.disabled = true; btn.textContent = "Processando...";
+
+      try {
+        const res = await fetch(API_BASE + "/api/redeem", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: LINK_TOKEN, user_id: scannedUserId,
+            product_id: selectedProduct.id, amount: selectedProduct.spark_cost,
+            product_name: selectedProduct.name, merchant_id: merchant.id,
+          }),
+        });
+        const data = await res.json();
+        document.getElementById("confirmModal").style.display = "none";
+
+        if (data.ok) {
+          document.getElementById("successText").textContent = "Resgate concluido!";
+          document.getElementById("successSub").textContent = scannedUser.name + " \u2022 " + selectedProduct.name + " \u2022 -" + selectedProduct.spark_cost + " sparks";
+          document.getElementById("successModal").style.display = "flex";
+          setTimeout(() => { document.getElementById("successModal").style.display = "none"; }, 3500);
+          loadHistory();
+        } else {
+          alert(data.error === "insufficient_balance" ? "Saldo insuficiente! Saldo: " + data.balance + " sparks" : "Erro: " + data.error);
+        }
+      } catch { alert("Erro de conexao"); }
+
+      scannedUserId = null; scannedUser = null;
+    }
+
+    async function loadHistory() {
+      try {
+        const res = await fetch(API_BASE + "/api/history?token=" + LINK_TOKEN);
+        const data = await res.json();
+        if (!data.ok) return;
+
+        const sc = document.getElementById("statCount");
+        const ss = document.getElementById("statSparks");
+        if (sc) sc.textContent = data.count;
+        if (ss) ss.textContent = data.total_sparks;
+
+        const list = document.getElementById("historyList");
+        if (!list) return;
+        if (data.redemptions.length === 0) {
+          list.innerHTML = '<div class="history-empty">Nenhum resgate hoje</div>';
+        } else {
+          list.innerHTML = data.redemptions.map(r => `
+            <div class="history-item">
+              <div>
+                <div class="history-name">${r.user_name}</div>
+                <div class="history-product">${r.product_name || "Produto"}</div>
+              </div>
+              <div style="text-align:right">
+                <div class="history-amount">-${r.amount}</div>
+                <div class="history-time">${new Date(r.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>
+              </div>
+            </div>
+          `).join("");
+        }
+      } catch {}
+    }
+  </script>
+</body>
+</html>
